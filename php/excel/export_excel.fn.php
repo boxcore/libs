@@ -329,6 +329,7 @@ require '../../ext/PHPExcel/PHPExcel.php'; // 引入PHPExcel类,在 https://gith
 $data_quick = array(
     array('id'=> 'num','name'=>'for_name','mark'=>'say_hello'),
     array('id'=> '12','name'=>'name1','mark'=>'hello','ex' => 'go_ex'),
+    array(),
     array('id'=> '12','name'=>'name1','mark'=>'hello'),
 );
 export_excel_quick( $data_quick, 'test');

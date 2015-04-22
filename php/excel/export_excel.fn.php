@@ -6,7 +6,7 @@
  *  $data格式: $data[id] = array(
  *              'sheet_name'  => 'sheet列名',
  *              'sheet_data'=> array(数据),
- *              'sheet_field' => array(数据字段对应标题),
+ *              'sheet_field' => array(数据字段对应标题), // 内容为 key=>value 格式
  *              'sheet_width'=> array(数据字段对应宽度)
  *              );
  * ----------------------------------------------------
@@ -125,21 +125,21 @@ function export_excel_obj($data, $filename) {
  */
 function export_excel_sheet($data, $filename) {
 
-    $field_x = range('A', 'Z');
-
-    $phpxcel = new PHPExcel();
-    $writer  = new PHPExcel_Writer_Excel5($phpxcel);
-
+    /**
+     * 初始Excel表
+     */
     $sheet_index = 0;
     $sheet_num   = count($data);
     
+    $phpxcel     = new PHPExcel();
+
     foreach ($data as $v) {
 
         if (!empty($v['sheet_field']) && !empty($v['sheet_data'])) {
 
             $field_x = array();
-            $letter = 'A';
-            $t = count($v['sheet_field']);
+            $letter  = 'A';
+            $t       = count($v['sheet_field']);
             while ( !isset($field_x[$t]) ) {
                 $field_x[] = $letter++;
             }
@@ -202,7 +202,7 @@ function export_excel_sheet($data, $filename) {
 
     // 设置头文件
     $ua               = $_SERVER["HTTP_USER_AGENT"];
-    $filename         = (isset($filename) && !empty($filename)) ? $filename : '导出数据.xls';
+    $filename         = (isset($filename) && !empty($filename)) ? $filename.'.xls' : '导出数据.xls';
     $encoded_filename = str_replace("+", "%20", urlencode($filename));
     if (preg_match("/MSIE/", $ua)) {
         header('Content-Disposition: attachment; filename="' . $encoded_filename . '"');
@@ -214,9 +214,64 @@ function export_excel_sheet($data, $filename) {
 
     header('Cache-Control: max-age=0');
 
+    $writer  = new PHPExcel_Writer_Excel5($phpxcel);
     $writer->save('php://output'); // 输出到浏览器
 }
 
+
+/**
+ * 快捷导出excel
+ * --------------------------------------------------------------------------------
+ * 每行数组为一行数据
+ * --------------------------------------------------------------------------------
+ * 
+ * @author chunze.huang
+ * @date   2015-04-15
+ * @param  array     $data
+ * @param  string    $filename 文件名
+ * @return resource
+ */
+function export_excel_quick($data, $filename) {
+
+    $phpxcel = new PHPExcel();
+    $phpxcel->createSheet();
+
+    $field_y = 1;
+    foreach($data as $v){
+
+        $field_x = 'A';
+        $t       = count($v);
+        foreach( $v as $vo){
+            $phpxcel->getActiveSheet()->setCellValue($field_x . $field_y, $vo);
+            $field_x++;
+        }
+
+        ++$field_y;
+    }
+
+
+    /** 导出excel */
+    header('Content-Type: application/vnd.ms-excel');
+
+
+    // 设置头文件
+    $ua               = $_SERVER["HTTP_USER_AGENT"];
+    $filename         = (isset($filename) && !empty($filename)) ? $filename.'.xls' : '导出数据.xls';
+    $encoded_filename = str_replace("+", "%20", urlencode($filename));
+    if (preg_match("/MSIE/", $ua)) {
+        header('Content-Disposition: attachment; filename="' . $encoded_filename . '"');
+    } else if (preg_match("/Firefox/", $ua)) {
+        header('Content-Disposition: attachment; filename*="utf8\'\'' . $filename . '"');
+    } else {
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+    }
+
+    header('Cache-Control: max-age=0');
+
+    $writer = new PHPExcel_Writer_Excel5($phpxcel);
+    $writer->save('php://output'); // 输出到浏览器
+
+}
 
 
 // 模拟数据
@@ -255,7 +310,7 @@ $data[2] = array(
 $data_sheet[0] = array(
     'sheet_name'  => '测试列3',
     'sheet_data'=> array(
-        array('id'=> '12','name'=>'name1','mark'=>'hello'),
+        array('id'=> 'num','name'=>'for_name','mark'=>'say_hello'),
         array('id'=> '12','name'=>'name1','mark'=>'hello'),
         array('id'=> '12','name'=>'name1','mark'=>'hello'),
     ),
@@ -263,7 +318,17 @@ $data_sheet[0] = array(
     'sheet_width'=> array(1=>15),
 );
 
+
+
 //导出模拟数据
 require '../../ext/PHPExcel/PHPExcel.php'; // 引入PHPExcel类,在 https://github.com/PHPOffice/PHPExcel/tree/develop/Classes
 // export_excel_obj($data, '这是名字.xls');
-export_excel_sheet($data_sheet, '这是名字.xls');
+// export_excel_sheet($data_sheet, '这是名字.xls');
+// 
+
+$data_quick = array(
+    array('id'=> 'num','name'=>'for_name','mark'=>'say_hello'),
+    array('id'=> '12','name'=>'name1','mark'=>'hello','ex' => 'go_ex'),
+    array('id'=> '12','name'=>'name1','mark'=>'hello'),
+);
+export_excel_quick( $data_quick, 'test');

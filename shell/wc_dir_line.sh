@@ -9,22 +9,23 @@
 ########################################
 #
 
-cur_dir=`pwd`
-dirs=`ls -dm */`
-file_name='cnt.txt'
-rm -rf $file_name
-touch $file_name
-IFS='/, ' read -ra ADDR <<< "$dirs"
+CUR_DIR=`pwd`
+# 通过ls获取目录时候可能有换行符,需要作过滤
+DIRS=`ls -dm */ | sed 'N;s/\n/ /g' `
+FILE_NAME='cnt.txt'
+rm -rf $FILE_NAME
+touch $FILE_NAME
+IFS='/, ' read -ra ADDR <<< "$DIRS"
 
 OIFS=$IFS
 IFS=', '
-arr2=$dirs
+arr2=$DIRS
 for x in $arr2; do
 if [ $x ]; then
-    echo "$cur_dir/$x" `date "+%Y-%m-%d %H:%M:%S"` >> $file_name
-    find $cur_dir/$x -name "*.log" |xargs cat|wc -l >> $file_name
+    echo -n  [`date "+%Y-%m-%d %H:%M:%S"`] "$CUR_DIR/$x Line Count : " >> $FILE_NAME
+    find $CUR_DIR/$x -name "*.log" |xargs cat|wc -l >> $FILE_NAME
 fi
 done
 
-# find $cur_dir/$i -name "*.log" |xargs cat|grep -v ^$|wc -l >> $file_name
-# wc -l `find $cur_dir/$i -name "*.log"`|tail -n1 >> $file_name
+# find $CUR_DIR/$i -name "*.log" |xargs cat|grep -v ^$|wc -l >> $FILE_NAME
+# wc -l `find $CUR_DIR/$i -name "*.log"`|tail -n1 >> $FILE_NAME
